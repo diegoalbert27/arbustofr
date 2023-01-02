@@ -15,8 +15,20 @@ class App
     {
         $routes = new RouteCollection();
 
-        $routes->add('hello', new Route('/hello/{name}', ['name' => 'World']));
-        $routes->add('bye', new Route('/bye'));
+        $routes->add('hello', new Route('/hello/{name}', [
+            'name' => 'World',
+            '_controller' => function ($request) {
+                $response = render_template($request);
+                $response->headers->set('Content-type', 'text/plain');
+
+                return $response;
+            }
+        ]));
+
+        $routes->add('bye', new Route('/bye/{name}', [
+            'name' => 'World',
+            '_controller' => 'Arbustofr\Controllers\ByeController::index'
+        ]));
 
         return $routes;
     }
