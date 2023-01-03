@@ -13,7 +13,7 @@ class ByeController
      * @param  mixed $request
      * @return Response
      */
-    public function index($name): Response
+    public function index(Request $request, $name): Response
     {
         $response = new Response("Goodbye {$name}");
         $response->headers->set('Content-type', 'text/plain');

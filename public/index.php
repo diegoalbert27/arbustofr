@@ -2,15 +2,15 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Arbustofr\GoogleListener;
+
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
-use Symfony\Component\Routing\Exception\ResourceNotFoundException;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 use Symfony\Component\HttpKernel\Controller\ControllerResolver;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * render_template
@@ -32,23 +32,15 @@ $request = Request::createFromGlobals();
 $routes = Arbustofr\App::getRoutes();
 
 $context = new RequestContext();
-$context->fromRequest($request);
 $matcher = new UrlMatcher($routes, $context);
+
+$dispatcher = new EventDispatcher();
+$dispatcher->addSubscriber(new GoogleListener());
 
 $controller_resolver = new ControllerResolver();
 $argument_resolver = new ArgumentResolver();
 
-try {
-    $request->attributes->add($matcher->match($request->getPathInfo()));
-
-    $controller = $controller_resolver->getController($request);
-    $arguments = $argument_resolver->getArguments($request, $controller);
-
-    $response = call_user_func_array($controller, $arguments);
-} catch (ResourceNotFoundException $exception) {
-    $response = new Response('Not Found', 404);
-} catch (Exception $exception) {
-    $response = new Response($exception->getMessage(), 500);
-}
+$framework = new Arbustofr\Framework($dispatcher, $matcher, $controller_resolver, $argument_resolver);
+$response = $framework->handle($request);
 
 $response->send();
